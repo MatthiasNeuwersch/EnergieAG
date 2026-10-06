@@ -1,0 +1,65 @@
+openapi: 3.1.0
+info:
+  title: UrbanFleet Scooter Sharing API
+  description: Core backend service for UrbanFleet micro-mobility platform.
+  version: 1.0.0
+servers:
+  - url: https://api.urbanfleet.io/v1
+    description: Production Server
+paths:
+  /vehicles/{vehicleId}:
+    get:
+      summary: Get vehicle details
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "scooter-munich-042"
+      responses:
+        '200':
+          description: Vehicle details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vehicleId:
+                    type: string
+                  batteryPercent:
+                    type: integer
+                  status:
+                    type: string
+                    enum: [AVAILABLE, IN_USE, MAINTENANCE]
+  /rides/start:
+    post:
+      summary: Unlock e-scooter and start a ride
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - vehicleId
+              properties:
+                userId:
+                  type: string
+                vehicleId:
+                  type: string
+      responses:
+        '201':
+          description: Ride started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rideId:
+                    type: string
+                  status:
+                    type: string
+                  startTime:
+                    type: string

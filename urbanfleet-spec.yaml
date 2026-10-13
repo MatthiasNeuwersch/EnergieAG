@@ -280,7 +280,7 @@ paths:
                 scooterId:
                   type: string
       responses:
-        '201':
+        '202':
           description: Fahrt erfolgreich gestartet.
           content:
             application/json:

@@ -1,0 +1,189 @@
+openapi: 3.0.3
+info:
+  title: Gebrauchtwagen Markt API (Legacy Monolith)
+  description: Unoptimierte API mit massivem Over-Fetching und fehlender Struktur.
+  version: 1.0.0
+servers:
+  - url: https://api.gebrauchtwagen-mock.local/v1
+paths:
+  /cars:
+    get:
+      summary: Alle Gebrauchtwagen abrufen
+      description: Liefert aktuell ungeregelt alle Autos inklusive kompletter Historie und Händlerdetails zurück.
+      responses:
+        '200':
+          description: Riesen-Liste aller Fahrzeuge
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CarUnoptimized'
+    post:
+      summary: Neuen Gebrauchtwagen inserieren
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CarInputUnoptimized'
+      responses:
+        '201':
+          description: Erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarUnoptimized'
+  /cars/{id}:
+    get:
+      summary: Details zu einem Fahrzeug abrufen
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fahrzeugdetails gefunden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CarUnoptimized'
+        '404':
+          description: Nicht gefunden
+    delete:
+      summary: Inserat löschen
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Gelöscht
+components:
+  schemas:
+    CarUnoptimized:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1042
+        internalTrackingUuid:
+          type: string
+          example: "a8f5c823-91b4-4f81-9872-234b5c678901"
+        brand:
+          type: string
+          example: "Volkswagen"
+        model:
+          type: string
+          example: "Golf VII Variant Highline"
+        trimLevel:
+          type: string
+          example: "2.0 TDI SCR BlueMotion Technology"
+        year:
+          type: integer
+          example: 2018
+        mileageInKilometers:
+          type: integer
+          example: 145230
+        priceInCents:
+          type: integer
+          example: 1450000
+        currency:
+          type: string
+          example: "EUR"
+        rawDescriptionHtml:
+          type: string
+          example: "<div style='font-family:Arial;'><b>Top Zustand!</b> Scheckheftgepflegt bei VW Partner. Unfallfrei. Keine Garantie da Privatverkauf... [hier folgen noch 2000 Zeichen Marketing-Text]</div>"
+        dealerInformation:
+          type: object
+          properties:
+            dealerId:
+              type: integer
+              example: 509
+            dealerName:
+              type: string
+              example: "Auto Zentrum Süd GmbH & Co. KG"
+            dealerFullAddress:
+              type: string
+              example: "Musterstraße 123, 10115 Berlin, Deutschland"
+            dealerTaxId:
+              type: string
+              example: "DE123456789"
+            dealerSupportHotline:
+              type: string
+              example: "+49 30 55501928"
+            dealerRatingAverage:
+              type: number
+              example: 4.78
+            dealerActiveContractsCount:
+              type: integer
+              example: 42
+        previousOwnersHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              ownerIndex:
+                type: integer
+                example: 1
+              durationMonths:
+                type: integer
+                example: 36
+              usageType:
+                type: string
+                example: "Company Leasing"
+              lastKnownRegion:
+                type: string
+                example: "Bavaria, Germany"
+        inspectionLogisticsMetadata:
+          type: object
+          properties:
+            lastInspectionDate:
+              type: string
+              example: "2025-05-12T10:00:00Z"
+            inspectorId:
+              type: string
+              example: "TUEV-SUD-99482"
+            nextRecommendedCheck:
+              type: string
+              example: "2027-05-12T00:00:00Z"
+            brakesConditionPercent:
+              type: integer
+              example: 85
+            tiresTreadDepthMm:
+              type: number
+              example: 5.5
+    CarInputUnoptimized:
+      type: object
+      required:
+        - brand
+        - model
+        - year
+        - priceInCents
+        - dealerInformation
+      properties:
+        brand:
+          type: string
+          example: "BMW"
+        model:
+          type: string
+          example: "320d Touring"
+        year:
+          type: integer
+          example: 2020
+        priceInCents:
+          type: integer
+          example: 2490000
+        rawDescriptionHtml:
+          type: string
+          example: "Fahrzeug in Top-Zustand."
+        dealerInformation:
+          type: object
+          properties:
+            dealerId:
+              type: integer
+              example: 509

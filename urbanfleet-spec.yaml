@@ -25,6 +25,8 @@ servers:
     description: Apidog Smart Mock Server
 
 tags:
+  - name: Authentication
+    description: Anmeldung und Ausstellung von JWT Access Tokens (Mock-Beispiel für den Workshop).
   - name: Fleet Management
     description: Operationen zur Verwaltung von E-Scootern, Batteriestatus und Sperrungen.
   - name: Rides
@@ -35,6 +37,68 @@ tags:
     description: Live-Standorte und Performance-Kennzahlen.
 
 paths:
+  /auth/login:
+    post:
+      summary: Anmelden und JWT Access Token erhalten
+      description: >
+        Tauscht Benutzername und Passwort gegen ein JWT Access Token (und Refresh Token).
+        Der Endpunkt ist öffentlich und benötigt keinen Authorization-Header.
+        
+        **Mock-Hinweis:** Das Beispiel `ValidLogin` liefert in der Antwort ein statisches Test-JWT.
+        Dieses Token kann anschließend als `Authorization: Bearer <token>` an geschützten
+        Endpunkten (z. B. `GET /scooters`) verwendet werden.
+      operationId: login
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              ValidLogin:
+                summary: Gültige Zugangsdaten (liefert 200 mit Token)
+                value:
+                  username: "alice@example.com"
+                  password: "secret"
+              InvalidLogin:
+                summary: Ungültige Zugangsdaten (liefert 401)
+                value:
+                  username: "unknown@example.com"
+                  password: "wrong"
+      responses:
+        '200':
+          description: Anmeldung erfolgreich, Token ausgestellt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                LoginSuccess:
+                  summary: Erfolgreiche Anmeldung mit Test-JWT
+                  value:
+                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                    refresh_token: "mock-refresh-5f0c2c1e-7d1a-4a43-9c55-0e6f6a1b2d33"
+                    token_type: "Bearer"
+                    expires_in: 3600
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Ungültige Zugangsdaten.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                InvalidCredentials:
+                  summary: Benutzername oder Passwort falsch
+                  value:
+                    code: "INVALID_CREDENTIALS"
+                    message: "Benutzername oder Passwort ist falsch."
+                    timestamp: "2026-10-13T10:00:00Z"
+
   /scooters:
     get:
       summary: Scooter-Flotte abfragen
@@ -118,6 +182,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
 
@@ -371,20 +437,42 @@ components:
             timestamp: "2026-10-13T10:00:00Z"
     Unauthorized:
       description: Fehlender oder ungültiger Authentifizierungs-Token.
+      headers:
+        WWW-Authenticate:
+          description: Gibt das erwartete Authentifizierungsschema an.
+          schema:
+            type: string
+          example: 'Bearer realm="urbanfleet"'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-          example:
-            code: "UNAUTHORIZED"
-            message: "Bearer-Token fehlt oder ist abgelaufen."
-            timestamp: "2026-10-13T10:00:00Z"
+          examples:
+            UnauthorizedExample:
+              summary: Token fehlt oder ist ungültig
+              value:
+                code: "UNAUTHORIZED"
+                message: "Bearer-Token fehlt oder ist abgelaufen."
+                timestamp: "2026-10-13T10:00:00Z"
+            TokenExpiredExample:
+              summary: Token ist abgelaufen (Client sollte Refresh auslösen)
+              value:
+                code: "TOKEN_EXPIRED"
+                message: "Das Access Token ist abgelaufen."
+                timestamp: "2026-10-13T10:00:00Z"
     Forbidden:
       description: Keine Berechtigung für diese Aktion.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            InsufficientScopeExample:
+              summary: Token gültig, aber Berechtigung fehlt
+              value:
+                code: "INSUFFICIENT_SCOPE"
+                message: "Dem Token fehlt die erforderliche Berechtigung 'scooter:read'."
+                timestamp: "2026-10-13T10:00:00Z"
     NotFound:
       description: Die angeforderte Ressource wurde nicht gefunden.
       content:
@@ -403,6 +491,42 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "alice@example.com"
+        password:
+          type: string
+          format: password
+          example: "secret"
+
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: JWT Access Token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        refresh_token:
+          type: string
+          example: "mock-refresh-5f0c2c1e-7d1a-4a43-9c55-0e6f6a1b2d33"
+        token_type:
+          type: string
+          example: "Bearer"
+        expires_in:
+          type: integer
+          description: Gültigkeit des Access Tokens in Sekunden
+          example: 3600
+
     Scooter:
       type: object
       required:

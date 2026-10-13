@@ -1,0 +1,306 @@
+openapi: 3.1.0
+info:
+  title: Vehicle Performance Exercise API
+  version: 1.0.0
+  description: >-
+    Workshop API for payload optimization. /vehicles/legacy-full is intentionally
+    inefficient. /vehicles returns lightweight summaries with filtering and pagination.
+    /vehicles/{vehicleId}/detail returns expensive details for one vehicle. Static mock
+    examples do not automatically implement dynamic filtering or pagination.
+tags:
+  - name: Baseline
+  - name: Optimized
+paths:
+  /vehicles/legacy-full:
+    get:
+      tags: [Baseline]
+      summary: Baseline - return far too much data
+      operationId: getLegacyFullVehicles
+      description: >-
+        Intentionally poor design. Each vehicle includes list fields plus telemetry,
+        diagnostics, ride history, maintenance records, contact information and image URLs.
+      responses:
+        '200':
+          description: Oversized vehicle collection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generatedAt: { type: string, format: date-time }
+                  total: { type: integer }
+                  vehicles:
+                    type: array
+                    items: { $ref: '#/components/schemas/LegacyVehicle' }
+              example:
+                generatedAt: '2026-10-13T09:00:00Z'
+                total: 2
+                vehicles:
+                  - id: VH-1001
+                    name: City Scooter 1001
+                    status: AVAILABLE
+                    city: Graz
+                    latitude: 47.0707
+                    longitude: 15.4395
+                    batteryPercentage: 87
+                    rangeKm: 34.5
+                    serialNumber: UF-SCOOTER-00001001
+                    model: UrbanFleet S2
+                    manufacturer: UrbanFleet Mobility
+                    purchaseDate: '2025-03-15'
+                    lastServiceAt: '2026-09-28T11:25:00Z'
+                    ownerContact:
+                      team: Graz Operations
+                      email: graz-ops@example.invalid
+                      phone: '+43-000-000000'
+                      internalNotes: Internal contact details not needed in a list view.
+                    diagnostics:
+                      firmwareVersion: '2.14.0'
+                      motorTemperatureC: 41.7
+                      batteryTemperatureC: 29.1
+                      errorCodes: []
+                      report: >-
+                        All systems nominal. Battery health is within expected limits.
+                        Brake sensor calibration passed. Controller voltage is stable.
+                        GPS signal quality is good. No service action is currently required.
+                      checks:
+                        - { name: brakes, result: PASS, details: 'Front and rear brake sensors responded within thresholds.' }
+                        - { name: battery, result: PASS, details: 'Battery health and charge controller readings are within thresholds.' }
+                        - { name: motor, result: PASS, details: 'No active faults; operating temperature is normal.' }
+                        - { name: gps, result: PASS, details: 'GPS fix quality is sufficient for tracking and recovery.' }
+                    telemetry:
+                      - { timestamp: '2026-10-13T08:00:00Z', batteryVoltage: 41.8, speedKph: 0, motorTemperatureC: 39.4, latitude: 47.0707, longitude: 15.4395 }
+                      - { timestamp: '2026-10-13T08:05:00Z', batteryVoltage: 41.7, speedKph: 0, motorTemperatureC: 39.6, latitude: 47.0707, longitude: 15.4395 }
+                      - { timestamp: '2026-10-13T08:10:00Z', batteryVoltage: 41.7, speedKph: 0, motorTemperatureC: 39.7, latitude: 47.0707, longitude: 15.4395 }
+                      - { timestamp: '2026-10-13T08:15:00Z', batteryVoltage: 41.6, speedKph: 0, motorTemperatureC: 39.9, latitude: 47.0707, longitude: 15.4395 }
+                      - { timestamp: '2026-10-13T08:20:00Z', batteryVoltage: 41.6, speedKph: 0, motorTemperatureC: 40.0, latitude: 47.0707, longitude: 15.4395 }
+                      - { timestamp: '2026-10-13T08:25:00Z', batteryVoltage: 41.5, speedKph: 0, motorTemperatureC: 40.2, latitude: 47.0707, longitude: 15.4395 }
+                      - { timestamp: '2026-10-13T08:30:00Z', batteryVoltage: 41.5, speedKph: 0, motorTemperatureC: 40.3, latitude: 47.0707, longitude: 15.4395 }
+                    rideHistory:
+                      - { rideId: RD-9001, startedAt: '2026-10-12T16:12:00Z', endedAt: '2026-10-12T16:28:00Z', distanceKm: 3.2, fareEur: 4.8, startArea: Jakominiplatz, endArea: Hauptplatz }
+                      - { rideId: RD-8994, startedAt: '2026-10-12T12:02:00Z', endedAt: '2026-10-12T12:17:00Z', distanceKm: 2.4, fareEur: 3.6, startArea: Lendplatz, endArea: Jakominiplatz }
+                      - { rideId: RD-8970, startedAt: '2026-10-11T18:10:00Z', endedAt: '2026-10-11T18:35:00Z', distanceKm: 4.1, fareEur: 6.2, startArea: Hauptbahnhof, endArea: Lendplatz }
+                    maintenanceRecords:
+                      - { recordId: MT-1001, performedAt: '2026-09-28T11:25:00Z', category: INSPECTION, technician: Technician A, description: 'Routine inspection of brakes, tires, lights, steering column, battery contacts and frame fasteners.', parts: ['brake pads inspected', 'tire pressure checked', 'battery contacts cleaned'] }
+                      - { recordId: MT-0988, performedAt: '2026-08-20T10:10:00Z', category: REPAIR, technician: Technician B, description: 'Rear light connector replaced and tested.', parts: ['rear light connector'] }
+                    imageUrls: ['https://example.invalid/VH-1001/front.jpg', 'https://example.invalid/VH-1001/side.jpg', 'https://example.invalid/VH-1001/dashboard.jpg', 'https://example.invalid/VH-1001/battery.jpg']
+                  - id: VH-1002
+                    name: City Scooter 1002
+                    status: IN_USE
+                    city: Graz
+                    latitude: 47.0751
+                    longitude: 15.428
+                    batteryPercentage: 52
+                    rangeKm: 19.8
+                    serialNumber: UF-SCOOTER-00001002
+                    model: UrbanFleet S2
+                    manufacturer: UrbanFleet Mobility
+                    purchaseDate: '2025-04-02'
+                    lastServiceAt: '2026-09-21T09:00:00Z'
+                    ownerContact:
+                      team: Graz Operations
+                      email: graz-ops@example.invalid
+                      phone: '+43-000-000000'
+                      internalNotes: Internal contact details not needed in a list view.
+                    diagnostics:
+                      firmwareVersion: '2.14.0'
+                      motorTemperatureC: 48.2
+                      batteryTemperatureC: 31
+                      errorCodes: [BATTERY_LOW_WARNING]
+                      report: >-
+                        Vehicle is operating normally. Battery charge is below the preferred
+                        dispatch threshold. Recharge after the current ride; no immediate repair
+                        is required.
+                      checks:
+                        - { name: brakes, result: PASS, details: 'Brake sensor checks passed.' }
+                        - { name: battery, result: WARN, details: 'Battery is below the preferred dispatch threshold.' }
+                        - { name: motor, result: PASS, details: 'No active motor faults reported.' }
+                        - { name: gps, result: PASS, details: 'GPS fix quality is sufficient for location tracking.' }
+                    telemetry:
+                      - { timestamp: '2026-10-13T08:00:00Z', batteryVoltage: 38.2, speedKph: 14.5, motorTemperatureC: 45.1, latitude: 47.074, longitude: 47.4291 }
+                      - { timestamp: '2026-10-13T08:05:00Z', batteryVoltage: 38, speedKph: 17.2, motorTemperatureC: 46, latitude: 47.0744, longitude: 47.4288 }
+                      - { timestamp: '2026-10-13T08:10:00Z', batteryVoltage: 37.8, speedKph: 12.4, motorTemperatureC: 46.8, latitude: 47.0748, longitude: 47.4284 }
+                      - { timestamp: '2026-10-13T08:15:00Z', batteryVoltage: 37.7, speedKph: 0, motorTemperatureC: 47.1, latitude: 47.0751, longitude: 47.428 }
+                      - { timestamp: '2026-10-13T08:20:00Z', batteryVoltage: 37.6, speedKph: 0, motorTemperatureC: 47.5, latitude: 47.0751, longitude: 47.428 }
+                    rideHistory:
+                      - { rideId: RD-9010, startedAt: '2026-10-13T07:30:00Z', endedAt: null, distanceKm: 1.8, fareEur: 2.7, startArea: Hauptplatz, endArea: null }
+                      - { rideId: RD-8950, startedAt: '2026-10-10T17:00:00Z', endedAt: '2026-10-10T17:21:00Z', distanceKm: 3.7, fareEur: 5.5, startArea: Lendplatz, endArea: Hauptbahnhof }
+                    maintenanceRecords:
+                      - { recordId: MT-1002, performedAt: '2026-09-21T09:00:00Z', category: INSPECTION, technician: Technician C, description: 'Routine inspection and battery health assessment completed.', parts: ['brake pads inspected', 'battery health checked'] }
+                    imageUrls: ['https://example.invalid/VH-1002/front.jpg', 'https://example.invalid/VH-1002/side.jpg', 'https://example.invalid/VH-1002/dashboard.jpg']
+  /vehicles:
+    get:
+      tags: [Optimized]
+      summary: Optimized - list lightweight vehicle summaries
+      operationId: listVehicles
+      description: >-
+        Returns only fields needed for a list view. Filtering and pagination are part of the
+        contract; a static mock may return a fixed example unless mock rules or examples are configured.
+      parameters:
+        - name: status
+          in: query
+          description: Filter by vehicle status.
+          schema: { type: string, enum: [AVAILABLE, RESERVED, IN_USE, MAINTENANCE, OFFLINE] }
+        - name: city
+          in: query
+          description: Filter by city, e.g. Graz.
+          schema: { type: string, example: Graz }
+        - name: minBatteryPercentage
+          in: query
+          description: Return vehicles with at least this battery percentage.
+          schema: { type: integer, minimum: 0, maximum: 100, example: 30 }
+        - name: page
+          in: query
+          description: 1-based page number.
+          schema: { type: integer, minimum: 1, default: 1, example: 1 }
+        - name: pageSize
+          in: query
+          description: Maximum results per page.
+          schema: { type: integer, minimum: 1, maximum: 100, default: 10, example: 10 }
+        - name: sort
+          in: query
+          description: Sort field and direction.
+          schema: { type: string, enum: [name, '-name', batteryPercentage, '-batteryPercentage'], example: name }
+      responses:
+        '200':
+          description: Paginated vehicle summaries
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VehiclePage' }
+              examples:
+                summaryPage:
+                  summary: Small list response
+                  value:
+                    items:
+                      - { id: VH-1001, name: City Scooter 1001, status: AVAILABLE, city: Graz, batteryPercentage: 87, rangeKm: 34.5 }
+                      - { id: VH-1002, name: City Scooter 1002, status: IN_USE, city: Graz, batteryPercentage: 52, rangeKm: 19.8 }
+                    page: 1
+                    pageSize: 10
+                    totalItems: 2
+                    totalPages: 1
+                filteredAndPaged:
+                  summary: Example response for a filter plus pageSize=1
+                  value:
+                    items:
+                      - { id: VH-1001, name: City Scooter 1001, status: AVAILABLE, city: Graz, batteryPercentage: 87, rangeKm: 34.5 }
+                    page: 1
+                    pageSize: 1
+                    totalItems: 1
+                    totalPages: 1
+        '400':
+          description: Invalid filter or pagination parameter
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { code: INVALID_PARAMETER, message: 'pageSize must be between 1 and 100' }
+  /vehicles/{vehicleId}/detail:
+    get:
+      tags: [Optimized]
+      summary: Get full details for one vehicle
+      operationId: getVehicleDetail
+      description: Fetch expensive or rarely needed fields only when a user opens one vehicle.
+      parameters:
+        - name: vehicleId
+          in: path
+          required: true
+          schema: { type: string, example: VH-1001 }
+      responses:
+        '200':
+          description: Detailed information for one vehicle
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VehicleDetail' }
+              example:
+                id: VH-1001
+                serialNumber: UF-SCOOTER-00001001
+                model: UrbanFleet S2
+                manufacturer: UrbanFleet Mobility
+                purchaseDate: '2025-03-15'
+                lastServiceAt: '2026-09-28T11:25:00Z'
+                ownerContact: { team: Graz Operations, email: graz-ops@example.invalid, phone: '+43-000-000000' }
+                diagnostics:
+                  firmwareVersion: '2.14.0'
+                  motorTemperatureC: 41.7
+                  batteryTemperatureC: 29.1
+                  errorCodes: []
+                  report: 'All systems nominal. Battery health is within expected limits. Brake sensor calibration passed.'
+                  checks:
+                    - { name: brakes, result: PASS, details: 'Brake sensors responded within expected thresholds.' }
+                    - { name: battery, result: PASS, details: 'Battery and charge controller readings are within thresholds.' }
+                telemetry:
+                  - { timestamp: '2026-10-13T08:00:00Z', batteryVoltage: 41.8, speedKph: 0, motorTemperatureC: 39.4 }
+                  - { timestamp: '2026-10-13T08:05:00Z', batteryVoltage: 41.7, speedKph: 0, motorTemperatureC: 39.6 }
+                  - { timestamp: '2026-10-13T08:10:00Z', batteryVoltage: 41.7, speedKph: 0, motorTemperatureC: 39.7 }
+                rideHistory:
+                  - { rideId: RD-9001, startedAt: '2026-10-12T16:12:00Z', endedAt: '2026-10-12T16:28:00Z', distanceKm: 3.2, fareEur: 4.8 }
+                  - { rideId: RD-8994, startedAt: '2026-10-12T12:02:00Z', endedAt: '2026-10-12T12:17:00Z', distanceKm: 2.4, fareEur: 3.6 }
+                maintenanceRecords:
+                  - { recordId: MT-1001, performedAt: '2026-09-28T11:25:00Z', category: INSPECTION, description: 'Routine inspection of brakes, tires, lights and battery.' }
+                imageUrls: ['https://example.invalid/VH-1001/front.jpg', 'https://example.invalid/VH-1001/side.jpg']
+        '404':
+          description: Vehicle not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example: { code: VEHICLE_NOT_FOUND, message: 'No vehicle found for the supplied ID' }
+components:
+  schemas:
+    VehicleSummary:
+      type: object
+      required: [id, name, status, city, batteryPercentage, rangeKm]
+      properties:
+        id: { type: string, example: VH-1001 }
+        name: { type: string, example: City Scooter 1001 }
+        status: { type: string, enum: [AVAILABLE, RESERVED, IN_USE, MAINTENANCE, OFFLINE] }
+        city: { type: string, example: Graz }
+        latitude: { type: number, example: 47.0707 }
+        longitude: { type: number, example: 15.4395 }
+        batteryPercentage: { type: integer, minimum: 0, maximum: 100 }
+        rangeKm: { type: number, example: 34.5 }
+    LegacyVehicle:
+      allOf:
+        - { $ref: '#/components/schemas/VehicleSummary' }
+        - type: object
+          properties:
+            serialNumber: { type: string }
+            model: { type: string }
+            manufacturer: { type: string }
+            purchaseDate: { type: string, format: date }
+            lastServiceAt: { type: string, format: date-time }
+            ownerContact: { type: object, additionalProperties: true }
+            diagnostics: { type: object, additionalProperties: true }
+            telemetry: { type: array, items: { type: object, additionalProperties: true } }
+            rideHistory: { type: array, items: { type: object, additionalProperties: true } }
+            maintenanceRecords: { type: array, items: { type: object, additionalProperties: true } }
+            imageUrls: { type: array, items: { type: string, format: uri } }
+    VehiclePage:
+      type: object
+      required: [items, page, pageSize, totalItems, totalPages]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/VehicleSummary' } }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1 }
+        totalItems: { type: integer, minimum: 0 }
+        totalPages: { type: integer, minimum: 0 }
+    VehicleDetail:
+      type: object
+      required: [id, serialNumber, model, manufacturer, diagnostics]
+      properties:
+        id: { type: string }
+        serialNumber: { type: string }
+        model: { type: string }
+        manufacturer: { type: string }
+        purchaseDate: { type: string, format: date }
+        lastServiceAt: { type: string, format: date-time }
+        ownerContact: { type: object, additionalProperties: true }
+        diagnostics: { type: object, additionalProperties: true }
+        telemetry: { type: array, items: { type: object, additionalProperties: true } }
+        rideHistory: { type: array, items: { type: object, additionalProperties: true } }
+        maintenanceRecords: { type: array, items: { type: object, additionalProperties: true } }
+        imageUrls: { type: array, items: { type: string, format: uri } }
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string }
+        message: { type: string }

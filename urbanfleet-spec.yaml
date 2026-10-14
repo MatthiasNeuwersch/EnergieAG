@@ -65,7 +65,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /fleet/scooters:
+  /fleet/skooters:
     get:
       summary: Scooter-Flotte abfragen
       description: Liefert eine gefilterte und paginierte Liste aller E-Scooter im System (Pfad geändert).

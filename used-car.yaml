@@ -1,15 +1,72 @@
-openapi: 3.0.3
+openapi: 3.0.1
 info:
-  title: Gebrauchtwagen Markt API (Legacy Monolith)
-  description: Unoptimierte API mit massivem Over-Fetching und fehlender Struktur.
+  title: Usedcar
+  description: ''
   version: 1.0.0
-servers:
-  - url: https://api.gebrauchtwagen-mock.local/v1
+tags:
+  - name: Authentication
 paths:
+  /auth/login:
+    post:
+      summary: Anmelden und JWT Access Token erhalten
+      deprecated: false
+      description: >
+        Tauscht Benutzername und Passwort gegen ein JWT Access Token (und
+        Refresh Token). Der Endpunkt ist öffentlich und benötigt keinen
+        Authorization-Header.
+
+        **Mock-Hinweis:** Das Beispiel `ValidLogin` liefert in der Antwort ein
+        statisches Test-JWT. Dieses Token kann anschließend als `Authorization:
+        Bearer <token>` an geschützten Endpunkten (z. B. `GET /scooters`)
+        verwendet werden.
+      operationId: login
+      tags:
+        - Authentication
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              ValidLogin:
+                value:
+                  username: alice@example.com
+                  password: secret
+                summary: Gültige Zugangsdaten (liefert 200 mit Token)
+              InvalidLogin:
+                value:
+                  username: unknown@example.com
+                  password: wrong
+                summary: Ungültige Zugangsdaten (liefert 401)
+        required: true
+      responses:
+        '200':
+          description: Anmeldung erfolgreich, Token ausgestellt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+          headers: {}
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Ungültige Zugangsdaten.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          headers: {}
+      security: []
   /cars:
     get:
       summary: Alle Gebrauchtwagen abrufen
-      description: Liefert aktuell ungeregelt alle Autos inklusive kompletter Historie und Händlerdetails zurück.
+      deprecated: false
+      description: >-
+        Liefert aktuell ungeregelt alle Autos inklusive kompletter Historie und
+        Händlerdetails zurück.
+      tags: []
+      parameters: []
       responses:
         '200':
           description: Riesen-Liste aller Fahrzeuge
@@ -19,14 +76,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CarUnoptimized'
+          headers: {}
+      security: []
     post:
       summary: Neuen Gebrauchtwagen inserieren
+      deprecated: false
+      description: ''
+      tags: []
+      parameters: []
       requestBody:
-        required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CarInputUnoptimized'
+        required: true
       responses:
         '201':
           description: Erfolgreich erstellt
@@ -34,13 +97,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CarUnoptimized'
+          headers: {}
+      security: []
   /cars/{id}:
     get:
       summary: Details zu einem Fahrzeug abrufen
+      deprecated: false
+      description: ''
+      tags: []
       parameters:
         - name: id
           in: path
+          description: ''
           required: true
+          example: ''
           schema:
             type: integer
       responses:
@@ -50,19 +120,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CarUnoptimized'
+          headers: {}
         '404':
           description: Nicht gefunden
+          headers: {}
+      security: []
     delete:
       summary: Inserat löschen
+      deprecated: false
+      description: ''
+      tags: []
       parameters:
         - name: id
           in: path
+          description: ''
           required: true
+          example: ''
           schema:
             type: integer
       responses:
         '204':
           description: Gelöscht
+          headers: {}
+      security: []
 components:
   schemas:
     CarUnoptimized:
@@ -70,58 +150,79 @@ components:
       properties:
         id:
           type: integer
-          example: 1042
+          examples:
+            - 1042
         internalTrackingUuid:
           type: string
-          example: "a8f5c823-91b4-4f81-9872-234b5c678901"
+          examples:
+            - a8f5c823-91b4-4f81-9872-234b5c678901
         brand:
           type: string
-          example: "Volkswagen"
+          examples:
+            - Volkswagen
         model:
           type: string
-          example: "Golf VII Variant Highline"
+          examples:
+            - Golf VII Variant Highline
         trimLevel:
           type: string
-          example: "2.0 TDI SCR BlueMotion Technology"
+          examples:
+            - 2.0 TDI SCR BlueMotion Technology
         year:
           type: integer
-          example: 2018
+          examples:
+            - 2018
         mileageInKilometers:
           type: integer
-          example: 145230
+          examples:
+            - 145230
         priceInCents:
           type: integer
-          example: 1450000
+          examples:
+            - 1450000
         currency:
           type: string
-          example: "EUR"
+          examples:
+            - EUR
         rawDescriptionHtml:
           type: string
-          example: "<div style='font-family:Arial;'><b>Top Zustand!</b> Scheckheftgepflegt bei VW Partner. Unfallfrei. Keine Garantie da Privatverkauf... [hier folgen noch 2000 Zeichen Marketing-Text]</div>"
+          examples:
+            - >-
+              <div style='font-family:Arial;'><b>Top Zustand!</b>
+              Scheckheftgepflegt bei VW Partner. Unfallfrei. Keine Garantie da
+              Privatverkauf... [hier folgen noch 2000 Zeichen
+              Marketing-Text]</div>
         dealerInformation:
           type: object
           properties:
             dealerId:
               type: integer
-              example: 509
+              examples:
+                - 509
             dealerName:
               type: string
-              example: "Auto Zentrum Süd GmbH & Co. KG"
+              examples:
+                - Auto Zentrum Süd GmbH & Co. KG
             dealerFullAddress:
               type: string
-              example: "Musterstraße 123, 10115 Berlin, Deutschland"
+              examples:
+                - Musterstraße 123, 10115 Berlin, Deutschland
             dealerTaxId:
               type: string
-              example: "DE123456789"
+              examples:
+                - DE123456789
             dealerSupportHotline:
               type: string
-              example: "+49 30 55501928"
+              examples:
+                - +49 30 55501928
             dealerRatingAverage:
               type: number
-              example: 4.78
+              examples:
+                - 4.78
             dealerActiveContractsCount:
               type: integer
-              example: 42
+              examples:
+                - 42
         previousOwnersHistory:
           type: array
           items:
@@ -129,34 +230,43 @@ components:
             properties:
               ownerIndex:
                 type: integer
-                example: 1
+                examples:
+                  - 1
               durationMonths:
                 type: integer
-                example: 36
+                examples:
+                  - 36
               usageType:
                 type: string
-                example: "Company Leasing"
+                examples:
+                  - Company Leasing
               lastKnownRegion:
                 type: string
-                example: "Bavaria, Germany"
+                examples:
+                  - Bavaria, Germany
         inspectionLogisticsMetadata:
           type: object
           properties:
             lastInspectionDate:
               type: string
-              example: "2025-05-12T10:00:00Z"
+              examples:
+                - '2025-05-12T10:00:00Z'
             inspectorId:
               type: string
-              example: "TUEV-SUD-99482"
+              examples:
+                - TUEV-SUD-99482
             nextRecommendedCheck:
               type: string
-              example: "2027-05-12T00:00:00Z"
+              examples:
+                - '2027-05-12T00:00:00Z'
             brakesConditionPercent:
               type: integer
-              example: 85
+              examples:
+                - 85
             tiresTreadDepthMm:
               type: number
-              example: 5.5
+              examples:
+                - 5.5
     CarInputUnoptimized:
       type: object
       required:
@@ -168,22 +278,115 @@ components:
       properties:
         brand:
           type: string
-          example: "BMW"
+          examples:
+            - BMW
         model:
           type: string
-          example: "320d Touring"
+          examples:
+            - 320d Touring
         year:
           type: integer
-          example: 2020
+          examples:
+            - 2020
         priceInCents:
           type: integer
-          example: 2490000
+          examples:
+            - 2490000
         rawDescriptionHtml:
           type: string
-          example: "Fahrzeug in Top-Zustand."
+          examples:
+            - Fahrzeug in Top-Zustand.
         dealerInformation:
           type: object
           properties:
             dealerId:
               type: integer
-              example: 509
+              examples:
+                - 509
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          examples:
+            - alice@example.com
+        password:
+          type: string
+          format: password
+          examples:
+            - secret
+    TokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: JWT Access Token
+          examples:
+            - >-
+              eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        refresh_token:
+          type: string
+          examples:
+            - mock-refresh-5f0c2c1e-7d1a-4a43-9c55-0e6f6a1b2d33
+        token_type:
+          type: string
+          examples:
+            - Bearer
+        expires_in:
+          type: integer
+          description: Gültigkeit des Access Tokens in Sekunden
+          examples:
+            - 3600
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - timestamp
+      properties:
+        code:
+          type: string
+          examples:
+            - VALIDATION_ERROR
+        message:
+          type: string
+          examples:
+            - Fehlerhafte Parameter in der Anfrage.
+        timestamp:
+          type: string
+          format: date-time
+          examples:
+            - '2026-10-13T10:42:00Z'
+  responses:
+    BadRequest:
+      description: Ungültige Anfrage oder Validierungsfehler.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            Success:
+              summary: Success
+              value:
+                code: INVALID_INPUT
+                message: Das Feld 'minBatteryLevel' muss zwischen 0 und 100 liegen.
+                timestamp: '2026-10-13T10:00:00Z'
+  securitySchemes: {}
+  parameters:
+    ScooterId:
+      name: id
+      in: path
+      required: true
+      description: Eindeutige Kennung des E-Scooters
+      schema:
+        type: string
+        example: scoot-8821
+servers: []
+security: []

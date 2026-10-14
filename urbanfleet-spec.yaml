@@ -1,12 +1,11 @@
+# UrbanFleet API v3.0.0 — intentionally breaking workshop release
+# Import after the v2.1.0 baseline to observe regression failures.
 openapi: 3.1.0
 info:
-  title: UrbanFleet API - Scooter & Ride Management
-  description: >
-    Die **UrbanFleet API** ist die zentrale Schnittstelle zur Verwaltung einer E-Scooter-Flotte,
-    Fahrtenabwicklung, Telemetriedaten-Erfassung und Maintenance-Prozesse.
-    
-    Diese Spezifikation dient als primäre Arbeitsgrundlage für den Workshop *API Lifecycle, Testing, Security & Performance with Apidog*.
-  version: 2.1.0
+  title: UrbanFleet API - Scooter & Ride Management (Breaking Change Demo)
+  description: Workshop release 3.0.0. This intentionally introduces incompatible contract changes for
+    demonstrating regression tests, API versioning, and breaking-change detection.
+  version: 3.0.0
   termsOfService: https://urbanfleet.io/terms
   contact:
     name: UrbanFleet Developer Support
@@ -15,41 +14,32 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
-
 servers:
-  - url: https://api.urbanfleet.io/v2
-    description: Production Server
-  - url: https://staging-api.urbanfleet.io/v2
-    description: Staging Environment (for Workshop Testing)
-  - url: https://mock.apidog.com/m1/urbanfleet-v2
-    description: Apidog Smart Mock Server
-
+- url: https://api.urbanfleet.io/v3
+  description: Production Server - v3
+- url: https://staging-api.urbanfleet.io/v3
+  description: Staging Environment - v3 (for Workshop Testing)
+- url: https://mock.apidog.com/m1/urbanfleet-v3
+  description: Apidog Smart Mock Server - v3
 tags:
-  - name: Authentication
-    description: Anmeldung und Ausstellung von JWT Access Tokens (Mock-Beispiel für den Workshop).
-  - name: Fleet Management
-    description: Operationen zur Verwaltung von E-Scootern, Batteriestatus und Sperrungen.
-  - name: Rides
-    description: Start, Beendigung und Abrechnung von Fahrten.
-  - name: Maintenance
-    description: Wartungstickets, Fehlerberichte und Inspektionen.
-  - name: Analytics & Telemetry
-    description: Live-Standorte und Performance-Kennzahlen.
-
+- name: Authentication
+  description: Anmeldung und Ausstellung von JWT Access Tokens (Mock-Beispiel für den Workshop).
+- name: Fleet Management
+  description: Operationen zur Verwaltung von E-Scootern, Batteriestatus und Sperrungen.
+- name: Rides
+  description: Start, Beendigung und Abrechnung von Fahrten.
+- name: Maintenance
+  description: Wartungstickets, Fehlerberichte und Inspektionen.
+- name: Analytics & Telemetry
+  description: Live-Standorte und Performance-Kennzahlen.
 paths:
   /auth/login:
     post:
       summary: Anmelden und JWT Access Token erhalten
-      description: >
-        Tauscht Benutzername und Passwort gegen ein JWT Access Token (und Refresh Token).
-        Der Endpunkt ist öffentlich und benötigt keinen Authorization-Header.
-        
-        **Mock-Hinweis:** Das Beispiel `ValidLogin` liefert in der Antwort ein statisches Test-JWT.
-        Dieses Token kann anschließend als `Authorization: Bearer <token>` an geschützten
-        Endpunkten (z. B. `GET /scooters`) verwendet werden.
+      description: In v3 werden Token-Felder in camelCase zurückgegeben.
       operationId: login
       tags:
-        - Authentication
+      - Authentication
       security: []
       requestBody:
         required: true
@@ -61,13 +51,13 @@ paths:
               ValidLogin:
                 summary: Gültige Zugangsdaten (liefert 200 mit Token)
                 value:
-                  username: "alice@example.com"
-                  password: "secret"
+                  username: alice@example.com
+                  password: secret
               InvalidLogin:
                 summary: Ungültige Zugangsdaten (liefert 401)
                 value:
-                  username: "unknown@example.com"
-                  password: "wrong"
+                  username: unknown@example.com
+                  password: wrong
       responses:
         '200':
           description: Anmeldung erfolgreich, Token ausgestellt.
@@ -79,10 +69,10 @@ paths:
                 LoginSuccess:
                   summary: Erfolgreiche Anmeldung mit Test-JWT
                   value:
-                    access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-                    refresh_token: "mock-refresh-5f0c2c1e-7d1a-4a43-9c55-0e6f6a1b2d33"
-                    token_type: "Bearer"
-                    expires_in: 3600
+                    token_type: Bearer
+                    accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                    refreshToken: mock-refresh-5f0c2c1e-7d1a-4a43-9c55-0e6f6a1b2d33
+                    expiresIn: 3600
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -95,50 +85,54 @@ paths:
                 InvalidCredentials:
                   summary: Benutzername oder Passwort falsch
                   value:
-                    code: "INVALID_CREDENTIALS"
-                    message: "Benutzername oder Passwort ist falsch."
-                    timestamp: "2026-10-13T10:00:00Z"
-
-  /scooters:
+                    errorCode: INVALID_CREDENTIALS
+                    detail: Benutzername oder Passwort ist falsch.
+                    occurredAt: '2026-10-13T10:00:00Z'
+  /vehicles:
     get:
-      summary: Scooter-Flotte abfragen
+      summary: Fahrzeugflotte abfragen (v3)
       description: Liefert eine gefilterte und paginierte Liste aller E-Scooter im System.
       operationId: getScooters
       tags:
-        - Fleet Management
+      - Fleet Management
       security:
-        - BearerAuth: []
-        - OAuth2:
-            - scooter:read
+      - BearerAuth: []
+      - OAuth2:
+        - scooter:read
       parameters:
-        - name: status
-          in: query
-          required: false
-          description: Filtern nach Scooter-Status
-          schema:
-            type: string
-            enum: [available, reserved, active, maintenance, offline]
-        - name: minBatteryLevel
-          in: query
-          required: false
-          description: Mindest-Akkuladung in Prozent
-          schema:
-            type: integer
-            minimum: 0
-            maximum: 100
-        - name: limit
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 20
-            maximum: 100
-        - name: offset
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 0
+      - name: status
+        in: query
+        required: false
+        description: Filtern nach Scooter-Status
+        schema:
+          type: string
+          enum:
+          - AVAILABLE
+          - RESERVED
+          - IN_USE
+          - MAINTENANCE
+          - OFFLINE
+      - name: minBatteryPercentage
+        in: query
+        required: false
+        description: Mindest-Akkuladung in Prozent
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 100
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 25
+          maximum: 50
+      - name: pageOffset
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
       responses:
         '200':
           description: Erreichbare Scooter erfolgreich ermittelt.
@@ -152,32 +146,34 @@ paths:
               schema:
                 type: object
                 required:
-                  - data
-                  - pagination
+                - items
+                - pageInfo
                 properties:
-                  data:
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  items:
                     type: array
                     items:
                       $ref: '#/components/schemas/Scooter'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
+                  pageInfo:
+                    $ref: '#/components/schemas/PageInfo'
               examples:
                 ScooterListExample:
                   summary: Beispielhafte Liste von Scootern
                   value:
-                    data:
-                      - id: "scoot-8821"
-                        model: "FleetMax Pro 3"
-                        status: "available"
-                        batteryLevel: 85
-                        location:
-                          latitude: 48.2082
-                          longitude: 16.3738
-                        lastServiced: "2026-09-15T08:30:00Z"
-                    pagination:
-                      total: 1
-                      limit: 20
-                      offset: 0
+                    items:
+                    - id: vehicle-8821
+                      model: FleetMax Pro 3
+                      status: AVAILABLE
+                      location:
+                        latitude: 48.2082
+                        longitude: 16.3738
+                      lastServiced: '2026-09-15T08:30:00Z'
+                      batteryPercentage: 85
+                    pageInfo:
+                      totalCount: 1
+                      pageSize: 20
+                      pageOffset: 0
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -186,17 +182,16 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
-
     post:
-      summary: Neuen Scooter registrieren
+      summary: Neues Fahrzeug registrieren (v3)
       description: Registriert ein neues E-Scooter-Fahrzeug in der UrbanFleet-Flotte.
       operationId: createScooter
       tags:
-        - Fleet Management
+      - Fleet Management
       security:
-        - BearerAuth: []
-        - OAuth2:
-            - admin:write
+      - BearerAuth: []
+      - OAuth2:
+        - admin:write
       requestBody:
         required: true
         content:
@@ -207,43 +202,48 @@ paths:
               NewScooterExample:
                 summary: Registrierungsdaten für neuen Scooter
                 value:
-                  serialNumber: "SN-99823-X"
-                  model: "FleetMax Pro 3"
-                  initialBatteryLevel: 100
+                  serialNumber: SN-99823-X
+                  model: FleetMax Pro 3
                   location:
                     latitude: 48.2082
                     longitude: 16.3738
+                  initialChargePercent: 100
       responses:
-        '211':
-          description: Scooter erfolgreich erstellt (Deprecated Response Code Demo).
-        '201':
-          description: Scooter erfolgreich registriert.
-          headers:
-            Location:
-              schema:
-                type: string
-              description: URL des neu erstellten Scooters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Scooter'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-
-  /scooters/{id}:
+        '202':
+          description: Fahrzeugregistrierung angenommen; Verarbeitung erfolgt asynchron.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - requestId
+                - state
+                properties:
+                  requestId:
+                    type: string
+                    format: uuid
+                    example: 3b241101-e2bb-4255-8caf-4136c566a962
+                  state:
+                    type: string
+                    enum:
+                    - QUEUED
+                    - PROCESSING
+                    example: QUEUED
+  /vehicles/{vehicleId}:
     parameters:
-      - $ref: '#/components/parameters/ScooterId'
-
+    - $ref: '#/components/parameters/ScooterId'
     get:
-      summary: Scooter-Details abrufen
+      summary: Fahrzeugdetails abrufen (v3)
       description: Ruf Informationen zu einem spezifischen E-Scooter ab.
       operationId: getScooterById
       tags:
-        - Fleet Management
+      - Fleet Management
       responses:
         '200':
           description: Details zum Scooter.
@@ -253,17 +253,16 @@ paths:
                 $ref: '#/components/schemas/Scooter'
         '404':
           $ref: '#/components/responses/NotFound'
-
     patch:
-      summary: Scooter-Status aktualisieren
+      summary: Fahrzeugdaten aktualisieren (v3)
       description: Erlaubt das Ändern des Fahrzeugstatus oder Standorts.
       operationId: updateScooter
       tags:
-        - Fleet Management
+      - Fleet Management
       security:
-        - BearerAuth: []
-        - OAuth2:
-            - scooter:control
+      - BearerAuth: []
+      - OAuth2:
+        - scooter:control
       requestBody:
         required: true
         content:
@@ -279,18 +278,17 @@ paths:
                 $ref: '#/components/schemas/Scooter'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  /scooters/{id}/lock:
+  /vehicles/{vehicleId}/lock:
     post:
-      summary: Scooter ferngesteuert sperren/entsperren
+      summary: Fahrzeug sperren oder entsperren (v3)
       description: Sendet ein Steuerungssignal an das Fahrzeug-Schloss.
       operationId: toggleScooterLock
       tags:
-        - Fleet Management
+      - Fleet Management
       security:
-        - BearerAuth: []
-        - OAuth2:
-            - scooter:control
+      - BearerAuth: []
+      - OAuth2:
+        - scooter:control
       requestBody:
         required: true
         content:
@@ -298,11 +296,13 @@ paths:
             schema:
               type: object
               required:
-                - action
+              - command
               properties:
-                action:
+                command:
                   type: string
-                  enum: [lock, unlock]
+                  enum:
+                  - LOCK
+                  - UNLOCK
       responses:
         '200':
           description: Schloss-Befehl erfolgreich ausgeführt.
@@ -311,25 +311,24 @@ paths:
               schema:
                 type: object
                 properties:
-                  scooterId:
-                    type: string
-                  isLocked:
-                    type: boolean
                   timestamp:
                     type: string
                     format: date-time
-
+                  vehicleId:
+                    type: string
+                  locked:
+                    type: boolean
   /rides:
     post:
-      summary: Neue Fahrt starten
+      summary: Neue Fahrt starten (v3)
       description: Initiierte den Verleihvorgang eines E-Scooters für einen Nutzer.
       operationId: startRide
       tags:
-        - Rides
+      - Rides
       security:
-        - BearerAuth: []
-        - OAuth2:
-            - ride:write
+      - BearerAuth: []
+      - OAuth2:
+        - ride:write
       requestBody:
         required: true
         content:
@@ -337,13 +336,13 @@ paths:
             schema:
               type: object
               required:
-                - userId
-                - scooterId
+              - userId
+              - vehicleId
               properties:
                 userId:
                   type: string
                   format: uuid
-                scooterId:
+                vehicleId:
                   type: string
       responses:
         '201':
@@ -352,25 +351,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Ride'
-
   /rides/{id}/finish:
     post:
-      summary: Fahrt beenden und abrechnen
+      summary: Fahrt beenden und abrechnen (v3)
       description: Schließt eine aktive Fahrt ab, berechnet die Kosten und storniert die Reservierung.
       operationId: finishRide
       tags:
-        - Rides
+      - Rides
       security:
-        - BearerAuth: []
-        - OAuth2:
-            - ride:write
+      - BearerAuth: []
+      - OAuth2:
+        - ride:write
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       requestBody:
         required: true
         content:
@@ -378,7 +376,7 @@ paths:
             schema:
               type: object
               required:
-                - endLocation
+              - endLocation
               properties:
                 endLocation:
                   $ref: '#/components/schemas/GeoLocation'
@@ -389,7 +387,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RideReceipt'
-
 components:
   securitySchemes:
     BearerAuth:
@@ -413,17 +410,15 @@ components:
             scooter:control: Sperren/Entsperren von Fahrzeugen
             admin:write: Administrative Flottenverwaltung
             ride:write: Starten und Beenden von Fahrten
-
   parameters:
     ScooterId:
-      name: id
+      name: vehicleId
       in: path
       required: true
-      description: Eindeutige Kennung des E-Scooters
+      description: Eindeutige Kennung des Fahrzeugs
       schema:
         type: string
-        example: "scoot-8821"
-
+        example: scoot-8821
   responses:
     BadRequest:
       description: Ungültige Anfrage oder Validierungsfehler.
@@ -432,9 +427,9 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           example:
-            code: "INVALID_INPUT"
-            message: "Das Feld 'minBatteryLevel' muss zwischen 0 und 100 liegen."
-            timestamp: "2026-10-13T10:00:00Z"
+            errorCode: INVALID_INPUT
+            detail: Das Feld 'minBatteryLevel' muss zwischen 0 und 100 liegen.
+            occurredAt: '2026-10-13T10:00:00Z'
     Unauthorized:
       description: Fehlender oder ungültiger Authentifizierungs-Token.
       headers:
@@ -442,7 +437,7 @@ components:
           description: Gibt das erwartete Authentifizierungsschema an.
           schema:
             type: string
-          example: 'Bearer realm="urbanfleet"'
+          example: Bearer realm="urbanfleet"
       content:
         application/json:
           schema:
@@ -451,15 +446,15 @@ components:
             UnauthorizedExample:
               summary: Token fehlt oder ist ungültig
               value:
-                code: "UNAUTHORIZED"
-                message: "Bearer-Token fehlt oder ist abgelaufen."
-                timestamp: "2026-10-13T10:00:00Z"
+                errorCode: UNAUTHORIZED
+                detail: Bearer-Token fehlt oder ist abgelaufen.
+                occurredAt: '2026-10-13T10:00:00Z'
             TokenExpiredExample:
               summary: Token ist abgelaufen (Client sollte Refresh auslösen)
               value:
-                code: "TOKEN_EXPIRED"
-                message: "Das Access Token ist abgelaufen."
-                timestamp: "2026-10-13T10:00:00Z"
+                errorCode: TOKEN_EXPIRED
+                detail: Das Access Token ist abgelaufen.
+                occurredAt: '2026-10-13T10:00:00Z'
     Forbidden:
       description: Keine Berechtigung für diese Aktion.
       content:
@@ -470,9 +465,9 @@ components:
             InsufficientScopeExample:
               summary: Token gültig, aber Berechtigung fehlt
               value:
-                code: "INSUFFICIENT_SCOPE"
-                message: "Dem Token fehlt die erforderliche Berechtigung 'scooter:read'."
-                timestamp: "2026-10-13T10:00:00Z"
+                errorCode: INSUFFICIENT_SCOPE
+                detail: Dem Token fehlt die erforderliche Berechtigung 'scooter:read'.
+                occurredAt: '2026-10-13T10:00:00Z'
     NotFound:
       description: Die angeforderte Ressource wurde nicht gefunden.
       content:
@@ -480,152 +475,162 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           example:
-            code: "NOT_FOUND"
-            message: "Scooter mit der ID 'scoot-9999' existiert nicht."
-            timestamp: "2026-10-13T10:00:00Z"
+            errorCode: NOT_FOUND
+            detail: Scooter mit der ID 'scoot-9999' existiert nicht.
+            occurredAt: '2026-10-13T10:00:00Z'
     InternalError:
       description: Interner Serverfehler.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-
   schemas:
     LoginRequest:
       type: object
       required:
-        - username
-        - password
+      - username
+      - password
       properties:
         username:
           type: string
-          example: "alice@example.com"
+          example: alice@example.com
         password:
           type: string
           format: password
-          example: "secret"
-
+          example: secret
     TokenResponse:
       type: object
       required:
-        - access_token
-        - token_type
-        - expires_in
+      - accessToken
+      - token_type
+      - expiresIn
       properties:
-        access_token:
-          type: string
-          description: JWT Access Token
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-        refresh_token:
-          type: string
-          example: "mock-refresh-5f0c2c1e-7d1a-4a43-9c55-0e6f6a1b2d33"
         token_type:
           type: string
-          example: "Bearer"
-        expires_in:
+          example: Bearer
+        accessToken:
+          type: string
+          description: JWT Access Token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        refreshToken:
+          type: string
+          example: mock-refresh-5f0c2c1e-7d1a-4a43-9c55-0e6f6a1b2d33
+        expiresIn:
           type: integer
           description: Gültigkeit des Access Tokens in Sekunden
           example: 3600
-
     Scooter:
       type: object
       required:
-        - id
-        - model
-        - status
-        - batteryLevel
-        - location
+      - id
+      - model
+      - status
+      - batteryPercentage
+      - location
       properties:
         id:
           type: string
-          example: "scoot-8821"
+          example: vehicle-8821
         model:
           type: string
-          example: "FleetMax Pro 3"
+          example: FleetMax Pro 3
         status:
           type: string
-          enum: [available, reserved, active, maintenance, offline]
-          example: "available"
-        batteryLevel:
-          type: integer
-          minimum: 0
-          maximum: 100
-          example: 85
+          enum:
+          - AVAILABLE
+          - RESERVED
+          - IN_USE
+          - MAINTENANCE
+          - OFFLINE
+          example: AVAILABLE
         location:
           $ref: '#/components/schemas/GeoLocation'
         lastServiced:
           type: string
           format: date-time
-          example: "2026-09-15T08:30:00Z"
-
+          example: '2026-09-15T08:30:00Z'
+        batteryPercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 85
+          description: Akkuladung in Prozent (v3)
     ScooterCreate:
       type: object
       required:
-        - serialNumber
-        - model
+      - serialNumber
+      - model
+      - initialChargePercent
       properties:
         serialNumber:
           type: string
-          example: "SN-99823-X"
+          example: SN-99823-X
         model:
           type: string
-          example: "FleetMax Pro 3"
-        initialBatteryLevel:
+          example: FleetMax Pro 3
+        location:
+          $ref: '#/components/schemas/GeoLocation'
+        initialChargePercent:
           type: integer
           default: 100
           example: 100
-        location:
-          $ref: '#/components/schemas/GeoLocation'
-
+          description: Initialer Ladezustand in Prozent (v3)
     ScooterUpdate:
       type: object
       properties:
         status:
           type: string
-          enum: [available, reserved, active, maintenance, offline]
-        batteryLevel:
+          enum:
+          - AVAILABLE
+          - RESERVED
+          - IN_USE
+          - MAINTENANCE
+          - OFFLINE
+        location:
+          $ref: '#/components/schemas/GeoLocation'
+        batteryPercentage:
           type: integer
           minimum: 0
           maximum: 100
-        location:
-          $ref: '#/components/schemas/GeoLocation'
-
+          description: Akkuladung in Prozent (v3)
     Ride:
       type: object
       required:
-        - id
-        - userId
-        - scooterId
-        - startTime
-        - status
+      - id
+      - userId
+      - scooterId
+      - startTime
+      - status
       properties:
         id:
           type: string
           format: uuid
-          example: "d3b07384-d113-424a-a567-d6e82f297285"
+          example: d3b07384-d113-424a-a567-d6e82f297285
         userId:
           type: string
           format: uuid
-          example: "usr-4412"
-        scooterId:
-          type: string
-          example: "scoot-8821"
+          example: usr-4412
         startTime:
           type: string
           format: date-time
-          example: "2026-10-13T10:15:00Z"
+          example: '2026-10-13T10:15:00Z'
         status:
           type: string
-          enum: [ongoing, completed, cancelled]
-          example: "ongoing"
-
+          enum:
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          example: IN_PROGRESS
+        vehicleId:
+          type: string
+          example: vehicle-8821
     RideReceipt:
       type: object
       required:
-        - rideId
-        - durationMinutes
-        - totalCost
-        - currency
+      - rideId
+      - durationMinutes
+      - totalCost
+      - currency
       properties:
         rideId:
           type: string
@@ -640,17 +645,16 @@ components:
         totalCost:
           type: number
           format: float
-          example: 4.80
+          example: 4.8
         currency:
           type: string
-          default: "EUR"
-          example: "EUR"
-
+          default: EUR
+          example: EUR
     GeoLocation:
       type: object
       required:
-        - latitude
-        - longitude
+      - latitude
+      - longitude
       properties:
         latitude:
           type: number
@@ -664,38 +668,40 @@ components:
           minimum: -180.0
           maximum: 180.0
           example: 16.3738
-
-    Pagination:
-      type: object
-      required:
-        - total
-        - limit
-        - offset
-      properties:
-        total:
-          type: integer
-          example: 120
-        limit:
-          type: integer
-          example: 20
-        offset:
-          type: integer
-          example: 0
-
     ErrorResponse:
       type: object
       required:
-        - code
-        - message
-        - timestamp
+      - errorCode
+      - detail
+      - occurredAt
       properties:
-        code:
+        errorCode:
           type: string
-          example: "VALIDATION_ERROR"
-        message:
+          example: VALIDATION_ERROR
+        detail:
           type: string
-          example: "Fehlerhafte Parameter in der Anfrage."
-        timestamp:
+          example: Fehlerhafte Parameter in der Anfrage.
+        occurredAt:
           type: string
           format: date-time
-          example: "2026-10-13T10:42:00Z"
+          example: '2026-10-13T10:42:00Z'
+    PageInfo:
+      type: object
+      required:
+      - totalCount
+      - pageSize
+      - pageOffset
+      properties:
+        totalCount:
+          type: integer
+          minimum: 0
+          example: 120
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 50
+          example: 25
+        pageOffset:
+          type: integer
+          minimum: 0
+          example: 0

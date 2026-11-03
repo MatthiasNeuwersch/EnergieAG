@@ -86,7 +86,7 @@ paths:
           required: false
           schema:
             type: integer
-            minimum: 10
+            minimum: 15
             maximum: 100
       responses:
         '200':
